@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Inicio{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Panel de control</p><h1>Resumen</h1><p class="muted">Préstamos y vencimientos al {{ today }}.</p></div><a class="button primary" href="{{ url_for('loan_new') }}">+ Nuevo préstamo</a></div>
+<div class="stats">
+  <div class="stat card"><span>Préstamos</span><strong>{{ totals.loan_count }}</strong></div>
+  <div class="stat card"><span>Total pactado</span><strong>{{ totals.lent_total | money }}</strong></div>
+  <div class="stat card"><span>Saldo por cobrar</span><strong>{{ totals.outstanding | money }}</strong></div>
+</div>
+<div class="grid-2">
+  <section class="card"><div class="section-head"><h2>Cuotas vencidas o para hoy</h2></div>
+    {% if due %}<div class="table-wrap"><table><thead><tr><th>Vence</th><th>Cliente</th><th>Falta</th></tr></thead><tbody>
+    {% for item in due %}<tr><td>{{ item.due_date }}</td><td><a href="{{ url_for('loan_detail', loan_id=item.loan_id) }}">{{ item.first_name }} {{ item.last_name }}</a></td><td>{{ (item.amount - item.paid_amount) | money }}</td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<p class="empty">No hay cuotas pendientes con vencimiento hasta hoy.</p>{% endif %}
+  </section>
+  <section class="card"><div class="section-head"><h2>Préstamos recientes</h2><a href="{{ url_for('clients') }}">Ver clientes</a></div>
+    {% if recent %}<div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Total</th><th>Saldo</th></tr></thead><tbody>
+    {% for loan in recent %}<tr><td><a href="{{ url_for('loan_detail', loan_id=loan.id) }}">{{ loan.first_name }} {{ loan.last_name }}</a></td><td>{{ loan.total_amount | money }}</td><td>{{ loan.balance | money }}</td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<p class="empty">Todavía no hay préstamos. <a href="{{ url_for('clients') }}">Registra un cliente</a> para empezar.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}

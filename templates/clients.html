@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Clientes{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Directorio</p><h1>Clientes</h1></div><a class="button primary" href="{{ url_for('client_new') }}">+ Nuevo cliente</a></div>
+<section class="card">
+  <form method="get" class="search-form"><input name="q" value="{{ query }}" placeholder="Buscar por nombre o identificación" aria-label="Buscar clientes"><button class="button secondary" type="submit">Buscar</button></form>
+  {% if clients %}<div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Identificación</th><th>Teléfono</th><th></th></tr></thead><tbody>
+  {% for client in clients %}<tr><td><a class="client-cell" href="{{ url_for('client_detail', client_id=client.id) }}">{% if client.photo %}<img class="avatar" src="{{ url_for('photo', filename=client.photo) }}" alt="">{% else %}<span class="avatar placeholder">{{ client.first_name[0] | upper }}</span>{% endif %}<strong>{{ client.first_name }} {{ client.last_name }}</strong></a></td><td>{{ client.identification }}</td><td>{{ client.phone or '—' }}</td><td><a href="{{ url_for('client_detail', client_id=client.id) }}">Ver</a></td></tr>{% endfor %}
+  </tbody></table></div>{% else %}<p class="empty">No se encontraron clientes.</p>{% endif %}
+</section>
+{% endblock %}
