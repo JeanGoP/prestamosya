@@ -177,6 +177,77 @@ class LoanFlowTests(unittest.TestCase):
             finally:
                 self.module.DATA_DIR = original_data_dir
 
+    def test_z_reset_requires_separate_key_and_preserves_configuration(self):
+        key_url = "/configuracion/borrar-datos/clave"
+        reset_url = "/configuracion/borrar-datos"
+        self.assertEqual(self.client.get(reset_url).status_code, 302)
+        bad_setup = self.client.post(key_url, data={
+            "csrf_token": self.csrf, "current_password": "wrong",
+            "new_password": "my-private-reset-key", "confirm_password": "my-private-reset-key",
+        })
+        self.assertEqual(bad_setup.status_code, 200)
+        with self.module.app.app_context():
+            self.assertIsNone(self.module.db().execute("SELECT 1 FROM reset_security WHERE id=1").fetchone())
+        setup = self.client.post(key_url, data={
+            "csrf_token": self.csrf, "current_password": "test-password",
+            "new_password": "my-private-reset-key", "confirm_password": "my-private-reset-key",
+        })
+        self.assertEqual(setup.status_code, 302)
+        with self.module.app.app_context():
+            connection = self.module.db()
+            connection.execute("INSERT INTO clients (identification, first_name, last_name, photo) VALUES (?, ?, ?, ?)",
+                               ("reset-test", "Reset", "Test", "reset-photo.jpg"))
+            client_id = connection.execute("SELECT id FROM clients WHERE identification='reset-test'").fetchone()[0]
+            connection.execute("""INSERT INTO loans (client_id, principal, monthly_rate_bps, term_months,
+                               frequency, start_date, interest_amount, total_amount)
+                               VALUES (?, 100000, 1000, 1, 'monthly', '2026-10-21', 10000, 110000)""", (client_id,))
+            loan_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+            connection.execute("INSERT INTO installments (loan_id, number, due_date, amount) VALUES (?, 1, '2026-11-20', 110000)", (loan_id,))
+            connection.execute("INSERT INTO payments (loan_id, amount, paid_on) VALUES (?, 1000, '2026-10-21')", (loan_id,))
+            payment_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+            installment_id = connection.execute("SELECT id FROM installments WHERE loan_id=?", (loan_id,)).fetchone()[0]
+            connection.execute("INSERT INTO payment_allocations (payment_id, installment_id, amount) VALUES (?, ?, 1000)",
+                               (payment_id, installment_id))
+            connection.execute("""INSERT INTO contracts (loan_id, filename, signed_at, debtor_signature_sha256,
+                               lender_signature_sha256, document_sha256)
+                               VALUES (?, 'reset-contract.pdf', '2026-10-21', 'a', 'b', 'c')""", (loan_id,))
+            connection.commit()
+        photo = self.module.UPLOAD_DIR / "reset-photo.jpg"
+        contract = self.module.CONTRACT_DIR / "reset-contract.pdf"
+        photo.write_bytes(b"photo")
+        contract.write_bytes(b"pdf")
+        for confirmation, password in (("wrong", "my-private-reset-key"), ("BORRAR TODO", "wrong")):
+            self.assertEqual(self.client.post(reset_url, data={
+                "csrf_token": self.csrf, "confirmation": confirmation, "reset_password": password,
+            }).status_code, 200)
+        for _ in range(4):
+            self.client.post(reset_url, data={
+                "csrf_token": self.csrf, "confirmation": "BORRAR TODO", "reset_password": "wrong",
+            })
+        blocked = self.client.post(reset_url, data={
+            "csrf_token": self.csrf, "confirmation": "BORRAR TODO", "reset_password": "my-private-reset-key",
+        })
+        self.assertEqual(blocked.status_code, 200)
+        self.assertIn(b"15 minutos", blocked.data)
+        with self.module.app.app_context():
+            self.assertGreater(self.module.db().execute("SELECT COUNT(*) FROM loans").fetchone()[0], 0)
+        self.assertEqual(self.client.post(key_url, data={
+            "csrf_token": self.csrf, "current_password": "test-password",
+            "new_password": "my-private-reset-key", "confirm_password": "my-private-reset-key",
+        }).status_code, 302)
+        self.assertEqual(self.client.post(reset_url, data={
+            "csrf_token": self.csrf, "confirmation": "BORRAR TODO", "reset_password": "my-private-reset-key",
+        }).status_code, 302)
+        with self.module.app.app_context():
+            connection = self.module.db()
+            for table in ("contracts", "payment_allocations", "payments", "installments", "loans", "clients"):
+                self.assertEqual(connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0], 0)
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM users").fetchone()[0], 1)
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM contract_settings").fetchone()[0], 1)
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM reset_security").fetchone()[0], 1)
+        self.assertFalse(photo.exists())
+        self.assertFalse(contract.exists())
+
 
 if __name__ == "__main__":
     unittest.main()

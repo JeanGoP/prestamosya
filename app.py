@@ -327,7 +327,91 @@ def contract_settings():
                 return redirect(url_for("contract_page", loan_id=loan_id))
             return redirect(url_for("contract_settings"))
     settings = db().execute("SELECT * FROM contract_settings WHERE id=1").fetchone()
-    return render_template("contract_settings.html", settings=settings, loan_id=loan_id)
+    reset_configured = db().execute("SELECT 1 FROM reset_security WHERE id=1").fetchone() is not None
+    return render_template("contract_settings.html", settings=settings, loan_id=loan_id,
+                           reset_configured=reset_configured)
+
+
+@app.route("/configuracion/borrar-datos/clave", methods=["GET", "POST"])
+@login_required
+def reset_password():
+    configured = db().execute("SELECT 1 FROM reset_security WHERE id=1").fetchone() is not None
+    if request.method == "POST":
+        user = db().execute("SELECT password_hash FROM users WHERE id=?", (session["user_id"],)).fetchone()
+        current_password = request.form.get("current_password", "")
+        new_password = request.form.get("new_password", "")
+        confirmation = request.form.get("confirm_password", "")
+        if not user or not check_password_hash(user["password_hash"], current_password):
+            flash("La contraseña de acceso es incorrecta.", "error")
+        elif not 12 <= len(new_password) <= 128:
+            flash("La clave de borrado debe tener entre 12 y 128 caracteres.", "error")
+        elif new_password != confirmation:
+            flash("Las claves de borrado no coinciden.", "error")
+        elif check_password_hash(user["password_hash"], new_password):
+            flash("Use una clave distinta de la contraseña de acceso.", "error")
+        else:
+            with db():
+                db().execute("""
+                    INSERT INTO reset_security (id, password_hash, failed_attempts, locked_until)
+                    VALUES (1, ?, 0, NULL)
+                    ON CONFLICT(id) DO UPDATE SET password_hash=excluded.password_hash,
+                    failed_attempts=0, locked_until=NULL
+                """, (generate_password_hash(new_password),))
+            flash("Clave de borrado guardada.", "success")
+            return redirect(url_for("reset_data"))
+    return render_template("reset_password.html", configured=configured)
+
+
+def reset_counts(connection):
+    return {table: connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+            for table in ("clients", "loans", "installments", "payments", "payment_allocations", "contracts")}
+
+
+@app.route("/configuracion/borrar-datos", methods=["GET", "POST"])
+@login_required
+def reset_data():
+    connection = db()
+    security = connection.execute("SELECT * FROM reset_security WHERE id=1").fetchone()
+    if not security:
+        return redirect(url_for("reset_password"))
+    counts = reset_counts(connection)
+    if request.method == "POST":
+        if request.form.get("confirmation", "").strip() != "BORRAR TODO":
+            flash("Escriba BORRAR TODO para confirmar.", "error")
+        elif security["locked_until"] and datetime.now(timezone.utc) < datetime.fromisoformat(security["locked_until"]):
+            flash("Demasiados intentos. Espere 15 minutos antes de volver a intentar.", "error")
+        elif not check_password_hash(security["password_hash"], request.form.get("reset_password", "")):
+            attempts = security["failed_attempts"] + 1
+            locked_until = (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat() if attempts >= 5 else None
+            with connection:
+                connection.execute("UPDATE reset_security SET failed_attempts=?, locked_until=? WHERE id=1",
+                                   (attempts, locked_until))
+            flash("Clave de borrado incorrecta." if not locked_until else
+                  "Demasiados intentos. Espere 15 minutos antes de volver a intentar.", "error")
+        else:
+            with connection:
+                connection.execute("BEGIN IMMEDIATE")
+                # Capture files inside the write transaction so they match the rows being removed.
+                photos = [row[0] for row in connection.execute("SELECT photo FROM clients WHERE photo IS NOT NULL")]
+                contracts = [row[0] for row in connection.execute("SELECT filename FROM contracts")]
+                for table in ("contracts", "payment_allocations", "payments", "installments", "loans", "clients"):
+                    connection.execute(f"DELETE FROM {table}")
+                connection.execute("UPDATE reset_security SET failed_attempts=0, locked_until=NULL WHERE id=1")
+            failed_files = 0
+            for directory, names in ((UPLOAD_DIR, photos), (CONTRACT_DIR, contracts)):
+                for filename in names:
+                    if Path(filename).name != filename:
+                        failed_files += 1
+                        continue
+                    try:
+                        (directory / filename).unlink(missing_ok=True)
+                    except OSError:
+                        failed_files += 1
+            flash("Todos los registros, fotos y contratos se borraron." if not failed_files else
+                  f"Registros borrados, pero {failed_files} archivo(s) no se pudieron eliminar del volumen.",
+                  "success" if not failed_files else "error")
+            return redirect(url_for("reset_data"))
+    return render_template("reset_data.html", counts=counts)
 
 
 def calculate_schedule(principal, rate_bps, months, frequency, start):

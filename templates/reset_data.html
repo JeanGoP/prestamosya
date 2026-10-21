@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Borrar datos{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Configuración</p><h1>Borrar todos los datos de prueba</h1><p class="muted">Revise lo que se eliminará antes de continuar.</p></div><a class="button secondary" href="{{ url_for('contract_settings') }}">Volver a configuración</a></div>
+<section class="card narrow">
+  <h2>Registros que se borrarán</h2>
+  <ul class="reset-list">
+    <li>{{ counts.clients }} clientes y sus fotos</li>
+    <li>{{ counts.loans }} préstamos</li>
+    <li>{{ counts.installments }} cuotas</li>
+    <li>{{ counts.payments }} pagos y {{ counts.payment_allocations }} asignaciones</li>
+    <li>{{ counts.contracts }} contratos firmados y sus PDF</li>
+  </ul>
+  <p class="muted">El usuario, la clave de borrado y los datos del prestamista se conservarán. La eliminación es irreversible; haga una copia de seguridad si necesita conservar estos datos.</p>
+  {% if counts.clients or counts.loans or counts.payments or counts.contracts %}
+  <form method="post" class="form-stack reset-form" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Escriba <strong>BORRAR TODO</strong> para confirmar<input name="confirmation" required autocomplete="off" spellcheck="false"></label>
+    <label>Clave de borrado<input type="password" name="reset_password" required autocomplete="off"></label>
+    <button class="button danger" type="submit">Borrar todos los registros</button>
+  </form>
+  {% else %}<p class="empty">No hay registros para borrar.</p>{% endif %}
+</section>
+{% endblock %}

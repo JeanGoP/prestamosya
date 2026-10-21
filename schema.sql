@@ -75,6 +75,13 @@ CREATE TABLE IF NOT EXISTS contracts (
     document_sha256 TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS reset_security (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    password_hash TEXT NOT NULL,
+    failed_attempts INTEGER NOT NULL DEFAULT 0,
+    locked_until TEXT
+);
+
 CREATE INDEX IF NOT EXISTS idx_installments_due ON installments(due_date, loan_id);
 CREATE INDEX IF NOT EXISTS idx_payments_loan ON payments(loan_id);
 CREATE INDEX IF NOT EXISTS idx_loans_client ON loans(client_id);

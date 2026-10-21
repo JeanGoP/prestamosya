@@ -35,6 +35,12 @@ El usuario administrador se actualiza con los valores de entorno en cada arranqu
 
 La firma dibujada y los hashes son evidencia técnica básica, no un servicio de firma digital certificada ni una verificación independiente de identidad. Revise el texto contractual y la validez del mecanismo de firma con asesoría jurídica antes de usarlo como documento definitivo. La tasa mensual predeterminada de 10% puede superar el límite legal colombiano aplicable; el sistema no calcula el límite de usura por modalidad y fecha.
 
+## Borrar datos de prueba
+
+En **Configuración → Borrar datos**, cree primero una clave de borrado distinta de la contraseña de acceso. Para crearla o cambiarla debe introducir su contraseña actual. Antes de eliminar datos, la pantalla muestra cuántos registros hay y exige escribir `BORRAR TODO` junto con la clave. Cinco claves incorrectas bloquean el borrado durante 15 minutos.
+
+El borrado elimina clientes, préstamos, cuotas, pagos, fotos y contratos firmados; conserva el usuario, los datos del prestamista y la clave de borrado. Es irreversible. Haga un respaldo del volumen `prestaya_data` antes si necesita esos datos.
+
 No requiere otro contenedor de base de datos. SQLite permite mantener todo en el mismo servicio. Para una instalación de alto tráfico o múltiples réplicas se necesitaría migrar a una base de datos servidor.
 
 ## Alcance actual

@@ -10,4 +10,12 @@
   <label>Lugar y forma de pago <span class="required">*</span><textarea name="payment_instructions" rows="3" maxlength="300" required placeholder="Ejemplo: Transferencia a la cuenta ... del Banco ...">{{ request.form.get('payment_instructions', settings.payment_instructions) }}</textarea></label>
   <button class="button primary" type="submit">Guardar datos</button>
 </form></section>
+<section class="card narrow settings-danger">
+  <h2>Borrar datos de prueba</h2>
+  <p class="muted">Elimina clientes, préstamos, cuotas, pagos, fotos y contratos firmados. Conserva el usuario de acceso y los datos del prestamista. Este borrado no se puede deshacer.</p>
+  <div class="actions settings-actions">
+    <a class="button danger" href="{{ url_for('reset_data') }}">Borrar datos</a>
+    <a class="button secondary" href="{{ url_for('reset_password') }}">{{ 'Cambiar clave de borrado' if reset_configured else 'Crear clave de borrado' }}</a>
+  </div>
+</section>
 {% endblock %}
