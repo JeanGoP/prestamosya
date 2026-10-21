@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}{{ 'Editar cliente' if client else 'Nuevo cliente' }}{% endblock %}
 {% block content %}
-<div class="page-head"><div><p class="eyebrow">Clientes</p><h1>{{ 'Editar cliente' if client else 'Nuevo cliente' }}</h1></div><a class="button secondary" href="{{ url_for('client_detail', client_id=client.id) if client else url_for('clients') }}">Volver</a></div>
+<div class="page-head"><div><p class="eyebrow">Clientes</p><h1>{{ 'Editar cliente' if client else 'Nuevo cliente' }}</h1></div><a class="button secondary" href="{{ url_for('client_detail', client_id=client.id) if client else url_for('loan_new') if return_to_loan else url_for('clients') }}">Volver</a></div>
 <section class="card narrow"><form method="post" enctype="multipart/form-data" class="form-stack">
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   <label>Identificación <span class="required">*</span><input name="identification" value="{{ request.form.get('identification', client.identification if client else '') }}" maxlength="40" required></label>

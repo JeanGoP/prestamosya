@@ -191,6 +191,7 @@ def clients():
 @app.route("/clientes/nuevo", methods=["GET", "POST"])
 @login_required
 def client_new():
+    return_to_loan = request.args.get("return_to") == "loan"
     if request.method == "POST":
         identification = request.form.get("identification", "").strip()
         first_name = request.form.get("first_name", "").strip()
@@ -208,6 +209,8 @@ def client_new():
                         VALUES (?, ?, ?, ?, ?, ?)
                     """, (identification, first_name, last_name, phone, address, photo))
                 flash("Cliente registrado.", "success")
+                if return_to_loan:
+                    return redirect(url_for("loan_new", client_id=cursor.lastrowid))
                 return redirect(url_for("client_detail", client_id=cursor.lastrowid))
             except sqlite3.IntegrityError:
                 if photo:
@@ -215,7 +218,7 @@ def client_new():
                 flash("Ya existe un cliente con esa identificación.", "error")
             except ValueError as error:
                 flash(str(error), "error")
-    return render_template("client_form.html", client=None)
+    return render_template("client_form.html", client=None, return_to_loan=return_to_loan)
 
 
 @app.route("/clientes/<int:client_id>/editar", methods=["GET", "POST"])

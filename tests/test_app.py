@@ -65,6 +65,20 @@ class LoanFlowTests(unittest.TestCase):
             self.assertEqual([(row["amount"], row["paid_amount"]) for row in rows], [(110000, 50000), (110000, 0)])
         self.assertIn(b"$170.000", self.client.get(f"/prestamos/{loan_id}").data)
 
+    def test_new_client_from_loan_returns_with_client_selected(self):
+        form = self.client.get("/prestamos/nuevo")
+        self.assertIn(b"/clientes/nuevo?return_to=loan", form.data)
+        response = self.client.post("/clientes/nuevo?return_to=loan", data={
+            "csrf_token": self.csrf,
+            "identification": "98765", "first_name": "Luis", "last_name": "Gómez",
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/prestamos/nuevo?client_id=", response.location)
+        client_id = response.location.rsplit("=", 1)[-1]
+        loan_form = self.client.get(response.location)
+        self.assertIn(b"Luis G", loan_form.data)
+        self.assertIn(f'<option value="{client_id}" selected>'.encode(), loan_form.data)
+
 
 if __name__ == "__main__":
     unittest.main()
