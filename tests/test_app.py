@@ -3,12 +3,15 @@ import os
 import tempfile
 import unittest
 from datetime import date
+from pathlib import Path
 
 
 class LoanFlowTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.temp_dir = tempfile.TemporaryDirectory()
+        test_data_dir = Path(__file__).resolve().parent.parent / "data"
+        test_data_dir.mkdir(exist_ok=True)
+        cls.temp_dir = tempfile.TemporaryDirectory(dir=test_data_dir)
         os.environ["DATA_DIR"] = cls.temp_dir.name
         os.environ["FLASK_SECRET_KEY"] = "test-secret-only"
         os.environ["ADMIN_USERNAME"] = "admin"
