@@ -13,17 +13,18 @@ Por ejemplo, $200.000 al 10%: un mes suma $220.000; dos meses suman $240.000. El
 ## Desarrollo local
 
 1. Copie `.env.example` a `.env` y configure `FLASK_SECRET_KEY` y `ADMIN_PASSWORD` con valores largos y únicos. Para HTTP local, configure `COOKIE_SECURE=false`.
-2. Ejecute `docker compose up --build`.
+2. Ejecute `docker compose -f compose.yaml -f compose.dev.yaml up --build`.
 3. Abra `http://localhost:8000` e ingrese con `ADMIN_USERNAME` (por defecto `admin`) y `ADMIN_PASSWORD`.
 
 El usuario administrador se actualiza con los valores de entorno en cada arranque. La ruta `/health` sirve como comprobación de salud.
 
 ## Despliegue en Coolify
 
-1. Suba este proyecto a un repositorio Git y cree un recurso **Docker Compose** en Coolify con `compose.yaml`.
-2. Configure `FLASK_SECRET_KEY`, `ADMIN_USERNAME` y `ADMIN_PASSWORD` como variables de entorno. `COOKIE_SECURE=true` requiere acceso por HTTPS, recomendado con un dominio configurado en Coolify.
-3. Configure el dominio para el servicio `prestaya`, puerto `8000`, y despliegue.
-4. Conserve el volumen `prestaya_data`: contiene `/app/data/prestaya.sqlite3` y `/app/data/uploads`. Para respaldar, haga una copia consistente de la base SQLite y guarde también la carpeta de fotos.
+1. En Coolify cree una **Application** desde el repositorio Git `https://github.com/JeanGoP/prestamosya`, rama `main`, con estrategia de construcción **Docker Compose**. Use `/` como directorio base y `compose.yaml` como ubicación del archivo Compose.
+2. Configure `FLASK_SECRET_KEY`, `ADMIN_USERNAME` y `ADMIN_PASSWORD` como variables de entorno. Use valores largos y únicos para las dos credenciales secretas.
+3. En **Domains**, asigne un dominio HTTPS al servicio `prestaya` con puerto interno `8000` (por ejemplo, `https://prestamos.ejemplo.com:8000` en el campo de Coolify; el visitante usará HTTPS normal). Mantenga `COOKIE_SECURE=true`.
+4. Despliegue y compruebe que `/health` devuelve `{"status":"ok"}` antes de ingresar. No active **Raw Compose**, porque Coolify debe configurar el proxy.
+5. Conserve el volumen `prestaya_data`: contiene `/app/data/prestaya.sqlite3` y `/app/data/uploads`. Para respaldar, haga una copia consistente de la base SQLite y guarde también la carpeta de fotos.
 
 No requiere otro contenedor de base de datos. SQLite permite mantener todo en el mismo servicio. Para una instalación de alto tráfico o múltiples réplicas se necesitaría migrar a una base de datos servidor.
 

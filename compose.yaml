@@ -2,8 +2,8 @@ services:
   prestaya:
     build: .
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
       FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:?Configure FLASK_SECRET_KEY}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
