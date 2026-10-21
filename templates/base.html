@@ -4,13 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}PrestaYa{% endblock %} · PrestaYa</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo.svg') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   {% if session.get('user_id') %}
   <header class="topbar">
     <div class="shell nav">
-      <a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-mark">P</span> PrestaYa</a>
+      <a class="brand" href="{{ url_for('dashboard') }}"><img class="brand-logo" src="{{ url_for('static', filename='logo.svg') }}" alt=""> PrestaYa</a>
       <nav aria-label="Principal">
         <a href="{{ url_for('dashboard') }}">Inicio</a>
         <a href="{{ url_for('clients') }}">Clientes</a>
