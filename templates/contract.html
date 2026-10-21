@@ -7,7 +7,6 @@
 {% elif missing %}
 <section class="card narrow"><h2>Complete estos datos antes de firmar</h2><ul class="missing-fields">{% for field in missing %}<li>{{ field }}</li>{% endfor %}</ul><div class="actions"><a class="button secondary" href="{{ url_for('contract_settings', loan_id=loan.id) }}">Datos del prestamista</a><a class="button secondary" href="{{ url_for('client_edit', client_id=client.id, loan_id=loan.id) }}">Datos del cliente</a></div></section>
 {% else %}
-<p class="notice warning">Revise que la tasa y las cláusulas cumplan con la normativa vigente antes de recoger las firmas. El 10% mensual puede superar el límite legal aplicable.</p>
 <article class="card contract-paper">
   <h2>CONTRATO DE PRÉSTAMO DE DINERO<br><small>(MUTUO CON INTERÉS)</small></h2>
   <p>Entre los suscritos: <strong>EL PRESTAMISTA</strong>, {{ settings.lender_name }}, identificado(a) con Cédula de Ciudadanía No. {{ settings.lender_identification }}, expedida en {{ settings.lender_id_issued_in }}, domiciliado(a) en {{ settings.lender_city }}; y <strong>EL DEUDOR</strong>, {{ client.first_name }} {{ client.last_name }}, identificado(a) con Cédula de Ciudadanía No. {{ client.identification }}, expedida en {{ client.id_issued_in }}, domiciliado(a) en {{ client.city }}, acuerdan celebrar este contrato bajo las siguientes cláusulas:</p>
@@ -35,7 +34,7 @@
       <div><label for="lender-pad">Firma del prestamista: {{ settings.lender_name }}</label><canvas class="signature-pad" id="lender-pad" width="800" height="240" aria-label="Espacio para la firma del prestamista"></canvas><button class="button secondary clear-signature" type="button" data-pad="lender-pad">Borrar firma</button></div>
       <div><label for="debtor-pad">Firma del deudor: {{ client.first_name }} {{ client.last_name }}</label><canvas class="signature-pad" id="debtor-pad" width="800" height="240" aria-label="Espacio para la firma del deudor"></canvas><button class="button secondary clear-signature" type="button" data-pad="debtor-pad">Borrar firma</button></div>
     </div>
-    <label class="checkbox-label"><input type="checkbox" name="accepted" value="yes" required> Ambas partes leyeron y aceptaron este contrato, el deudor confirma haber recibido el dinero y se verificó la tasa legal aplicable.</label>
+    <label class="checkbox-label"><input type="checkbox" name="accepted" value="yes" required> Ambas partes leyeron y aceptaron este contrato, y el deudor confirma haber recibido el dinero.</label>
     <button class="button primary" type="submit">Guardar contrato firmado</button>
   </form>
 </section>
