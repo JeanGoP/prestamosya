@@ -1,12 +1,14 @@
 {% extends 'base.html' %}
 {% block title %}{{ 'Editar cliente' if client else 'Nuevo cliente' }}{% endblock %}
 {% block content %}
-<div class="page-head"><div><p class="eyebrow">Clientes</p><h1>{{ 'Editar cliente' if client else 'Nuevo cliente' }}</h1></div><a class="button secondary" href="{{ url_for('client_detail', client_id=client.id) if client else url_for('loan_new') if return_to_loan else url_for('clients') }}">Volver</a></div>
+<div class="page-head"><div><p class="eyebrow">Clientes</p><h1>{{ 'Editar cliente' if client else 'Nuevo cliente' }}</h1></div><a class="button secondary" href="{{ url_for('contract_page', loan_id=contract_loan_id) if client and contract_loan_id else url_for('client_detail', client_id=client.id) if client else url_for('loan_new') if return_to_loan else url_for('clients') }}">Volver</a></div>
 <section class="card narrow"><form method="post" enctype="multipart/form-data" class="form-stack">
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   <label>Identificación <span class="required">*</span><input name="identification" value="{{ request.form.get('identification', client.identification if client else '') }}" maxlength="40" required></label>
   <div class="form-grid"><label>Nombres <span class="required">*</span><input name="first_name" value="{{ request.form.get('first_name', client.first_name if client else '') }}" maxlength="100" required></label><label>Apellidos <span class="required">*</span><input name="last_name" value="{{ request.form.get('last_name', client.last_name if client else '') }}" maxlength="100" required></label></div>
   <div class="form-grid"><label>Teléfono<input name="phone" type="tel" value="{{ request.form.get('phone', client.phone if client else '') }}" maxlength="40"></label><label>Dirección<input name="address" value="{{ request.form.get('address', client.address if client else '') }}" maxlength="200"></label></div>
+  <div class="form-grid"><label>Ciudad de expedición de la cédula<input name="id_issued_in" value="{{ request.form.get('id_issued_in', client.id_issued_in if client else '') }}" maxlength="100"></label><label>Ciudad de domicilio<input name="city" value="{{ request.form.get('city', client.city if client else '') }}" maxlength="100"></label></div>
+  <p class="muted">La ciudad de expedición, la ciudad de domicilio y el teléfono serán necesarios para firmar un contrato.</p>
   <label>Foto del cliente <span class="hint">Opcional. Puedes tomarla con la cámara del celular.</span><input type="file" name="photo" accept="image/*" capture="environment"></label>
   {% if client and client.photo %}<img class="photo-preview" src="{{ url_for('photo', filename=client.photo) }}" alt="Foto actual de {{ client.first_name }}">{% endif %}
   <div class="actions"><button class="button primary" type="submit">{{ 'Guardar cambios' if client else 'Registrar cliente' }}</button></div>

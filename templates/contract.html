@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Contrato del préstamo #{{ loan.id }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Préstamo #{{ loan.id }}</p><h1>Contrato de préstamo</h1><p class="muted">{{ client.first_name }} {{ client.last_name }} · {{ loan.principal | money }} de capital</p></div><a class="button secondary" href="{{ url_for('loan_detail', loan_id=loan.id) }}">Volver al préstamo</a></div>
+{% if contract %}
+<section class="card narrow"><h2>Contrato firmado</h2><p>El documento firmado el {{ contract.signed_at[:10] }} quedó guardado en PDF. Su contenido no se modifica aunque después cambien los datos del cliente o del prestamista.</p><a class="button primary" href="{{ url_for('contract_download', loan_id=loan.id) }}">Descargar contrato PDF</a></section>
+{% elif missing %}
+<section class="card narrow"><h2>Complete estos datos antes de firmar</h2><ul class="missing-fields">{% for field in missing %}<li>{{ field }}</li>{% endfor %}</ul><div class="actions"><a class="button secondary" href="{{ url_for('contract_settings', loan_id=loan.id) }}">Datos del prestamista</a><a class="button secondary" href="{{ url_for('client_edit', client_id=client.id, loan_id=loan.id) }}">Datos del cliente</a></div></section>
+{% else %}
+<p class="notice warning">Revise que la tasa y las cláusulas cumplan con la normativa vigente antes de recoger las firmas. El 10% mensual puede superar el límite legal aplicable.</p>
+<article class="card contract-paper">
+  <h2>CONTRATO DE PRÉSTAMO DE DINERO<br><small>(MUTUO CON INTERÉS)</small></h2>
+  <p>Entre los suscritos: <strong>EL PRESTAMISTA</strong>, {{ settings.lender_name }}, identificado(a) con Cédula de Ciudadanía No. {{ settings.lender_identification }}, expedida en {{ settings.lender_id_issued_in }}, domiciliado(a) en {{ settings.lender_city }}; y <strong>EL DEUDOR</strong>, {{ client.first_name }} {{ client.last_name }}, identificado(a) con Cédula de Ciudadanía No. {{ client.identification }}, expedida en {{ client.id_issued_in }}, domiciliado(a) en {{ client.city }}, acuerdan celebrar este contrato bajo las siguientes cláusulas:</p>
+  <h3>PRIMERA. OBJETO Y MONTO DEL PRÉSTAMO</h3>
+  <p>EL PRESTAMISTA entrega en calidad de préstamo a EL DEUDOR, quien declara recibir a satisfacción, la suma de <strong>{{ loan.principal | words }} ({{ loan.principal | money }} COP)</strong>.</p>
+  <h3>SEGUNDA. INTERESES</h3>
+  <p>El capital genera un interés corriente pactado de <strong>{{ loan.monthly_rate_bps | percent }} mensual</strong>, equivalente aproximadamente a {{ monthly_interest | money }} COP por mes. Durante el plazo de {{ loan.term_months }} {{ 'mes' if loan.term_months == 1 else 'meses' }}, el interés total es <strong>{{ loan.interest_amount | words }} ({{ loan.interest_amount | money }} COP)</strong>.</p>
+  <div class="contract-summary"><span>Capital: <strong>{{ loan.principal | money }}</strong></span><span>Intereses: <strong>{{ loan.interest_amount | money }}</strong></span><span>Total a pagar: <strong>{{ loan.total_amount | money }}</strong></span></div>
+  <h3>TERCERA. FORMA Y PLAZO DE PAGO</h3>
+  <p>EL DEUDOR pagará el total en <strong>{{ installments | length }} cuotas {{ {'weekly':'semanales','fortnightly':'quincenales','monthly':'mensuales'}[loan.frequency] }}</strong>, por los importes y en las fechas siguientes:</p>
+  <div class="table-wrap"><table><thead><tr><th>Cuota</th><th>Fecha de pago</th><th>Importe</th></tr></thead><tbody>{% for item in installments %}<tr><td>{{ item.number }}</td><td>{{ item.due_date | long_date }}</td><td>{{ item.amount | money }} COP</td></tr>{% endfor %}</tbody></table></div>
+  <p><strong>Lugar y forma de pago:</strong> {{ settings.payment_instructions }}</p>
+  <h3>CUARTA. INCUMPLIMIENTO Y MORA</h3>
+  <p>Si EL DEUDOR no paga alguna cuota en la fecha convenida, incurrirá en mora sin necesidad de reconvención o requerimiento judicial. EL PRESTAMISTA podrá exigir la cancelación inmediata del saldo pendiente, conforme a la ley aplicable.</p>
+  <h3>QUINTA. ACEPTACIÓN Y FIRMA</h3>
+  <p>Leído y aceptado por las partes, se firma en {{ settings.lender_city }}. Ambas partes conservarán una copia del documento firmado.</p>
+  <div class="contract-parties"><p><strong>EL PRESTAMISTA</strong><br>{{ settings.lender_name }}<br>C.C. {{ settings.lender_identification }}<br>Tel. {{ settings.lender_phone }}</p><p><strong>EL DEUDOR</strong><br>{{ client.first_name }} {{ client.last_name }}<br>C.C. {{ client.identification }}<br>Tel. {{ client.phone }}</p></div>
+</article>
+<section class="card contract-signing"><h2>Firmar en este dispositivo</h2><p class="muted">Cada persona debe dibujar su propia firma con el dedo, lápiz o mouse. Al guardar se creará un PDF que no podrá reemplazarse desde el sistema.</p>
+  <form method="post" action="{{ url_for('contract_sign', loan_id=loan.id) }}" id="signature-form" class="form-stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="lender_signature" id="lender-signature-data">
+    <input type="hidden" name="debtor_signature" id="debtor-signature-data">
+    <div class="signature-grid">
+      <div><label for="lender-pad">Firma del prestamista: {{ settings.lender_name }}</label><canvas class="signature-pad" id="lender-pad" width="800" height="240" aria-label="Espacio para la firma del prestamista"></canvas><button class="button secondary clear-signature" type="button" data-pad="lender-pad">Borrar firma</button></div>
+      <div><label for="debtor-pad">Firma del deudor: {{ client.first_name }} {{ client.last_name }}</label><canvas class="signature-pad" id="debtor-pad" width="800" height="240" aria-label="Espacio para la firma del deudor"></canvas><button class="button secondary clear-signature" type="button" data-pad="debtor-pad">Borrar firma</button></div>
+    </div>
+    <label class="checkbox-label"><input type="checkbox" name="accepted" value="yes" required> Ambas partes leyeron y aceptaron este contrato, el deudor confirma haber recibido el dinero y se verificó la tasa legal aplicable.</label>
+    <button class="button primary" type="submit">Guardar contrato firmado</button>
+  </form>
+</section>
+<script src="{{ url_for('static', filename='signature.js') }}" defer></script>
+{% endif %}
+{% endblock %}

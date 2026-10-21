@@ -16,6 +16,7 @@
         <a href="{{ url_for('dashboard') }}">Inicio</a>
         <a href="{{ url_for('clients') }}">Clientes</a>
         <a href="{{ url_for('loan_new') }}">Nuevo préstamo</a>
+        <a href="{{ url_for('contract_settings') }}">Configuración</a>
       </nav>
       <form method="post" action="{{ url_for('logout') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

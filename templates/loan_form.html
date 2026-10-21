@@ -2,6 +2,7 @@
 {% block title %}Nuevo préstamo{% endblock %}
 {% block content %}
 <div class="page-head"><div><p class="eyebrow">Operaciones</p><h1>Nuevo préstamo</h1><p class="muted">Interés simple mensual. Cada mes equivale a 30 días para el plan de pagos.</p></div></div>
+<p class="notice warning">Antes de ofrecer o firmar el préstamo, verifique que la tasa pactada cumpla con el límite legal aplicable. El 10% mensual predeterminado puede excederlo.</p>
 <section class="card narrow"><form method="post" class="form-stack" id="loan-form">
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   <label>Cliente <span class="required">*</span><select name="client_id" required><option value="">Seleccionar cliente</option>{% for client in clients %}<option value="{{ client.id }}" {% if request.form.get('client_id', selected_client) == client.id|string %}selected{% endif %}>{{ client.first_name }} {{ client.last_name }} · {{ client.identification }}</option>{% endfor %}</select></label>

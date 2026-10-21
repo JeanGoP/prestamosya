@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Configuración del contrato{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Configuración</p><h1>Datos para contratos</h1><p class="muted">Estos datos se usarán en los contratos nuevos. Los PDF ya firmados conservarán su contenido original.</p></div>{% if loan_id %}<a class="button secondary" href="{{ url_for('contract_page', loan_id=loan_id) }}">Volver al contrato</a>{% endif %}</div>
+<section class="card narrow"><form method="post" class="form-stack">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label>Nombre completo del prestamista <span class="required">*</span><input name="lender_name" value="{{ request.form.get('lender_name', settings.lender_name) }}" maxlength="150" required></label>
+  <div class="form-grid"><label>Cédula del prestamista <span class="required">*</span><input name="lender_identification" value="{{ request.form.get('lender_identification', settings.lender_identification) }}" maxlength="50" required></label><label>Ciudad donde se expidió la cédula <span class="required">*</span><input name="lender_id_issued_in" value="{{ request.form.get('lender_id_issued_in', settings.lender_id_issued_in) }}" maxlength="100" required></label></div>
+  <div class="form-grid"><label>Ciudad de domicilio y firma <span class="required">*</span><input name="lender_city" value="{{ request.form.get('lender_city', settings.lender_city) }}" maxlength="100" required></label><label>Teléfono del prestamista <span class="required">*</span><input name="lender_phone" type="tel" value="{{ request.form.get('lender_phone', settings.lender_phone) }}" maxlength="40" required></label></div>
+  <label>Lugar y forma de pago <span class="required">*</span><textarea name="payment_instructions" rows="3" maxlength="300" required placeholder="Ejemplo: Transferencia a la cuenta ... del Banco ...">{{ request.form.get('payment_instructions', settings.payment_instructions) }}</textarea></label>
+  <button class="button primary" type="submit">Guardar datos</button>
+</form></section>
+{% endblock %}

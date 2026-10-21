@@ -1,6 +1,6 @@
 # PrestaYa
 
-Sistema de préstamos con clientes, fotografía, planes semanales/quincenales/mensuales y registro de abonos. El backend, la interfaz, la base SQLite y el almacenamiento de fotografías se ejecutan en un solo servicio Docker.
+Sistema de préstamos con clientes, fotografía, planes semanales/quincenales/mensuales, registro de abonos y contratos firmados. El backend, la interfaz, la base SQLite, las fotografías y los PDF se ejecutan en un solo servicio Docker.
 
 ## Cálculo
 
@@ -24,7 +24,16 @@ El usuario administrador se actualiza con los valores de entorno en cada arranqu
 2. Configure `FLASK_SECRET_KEY`, `ADMIN_USERNAME` y `ADMIN_PASSWORD` como variables de entorno. Use valores largos y únicos para las dos credenciales secretas.
 3. `SERVICE_URL_PRESTAYA_8000` en `compose.yaml` indica a Coolify que enrute el dominio generado al servicio `prestaya` en el puerto interno `8000`. En **Domains** puede reemplazarlo por un dominio propio HTTPS. Mantenga `COOKIE_SECURE=true` al usar HTTPS. El dominio temporal `sslip.io` generado por Coolify usa HTTP; para probar el inicio de sesión allí configure temporalmente `COOKIE_SECURE=false` y vuelva a `true` cuando tenga HTTPS.
 4. Despliegue y compruebe que `/health` devuelve `{"status":"ok"}` antes de ingresar. No active **Raw Compose**, porque Coolify debe configurar el proxy. Si aparece `404 page not found`, revise que el dominio esté asociado al servicio `prestaya` y al puerto `8000`, y que el contenedor figure como saludable.
-5. Conserve el volumen `prestaya_data`: contiene `/app/data/prestaya.sqlite3` y `/app/data/uploads`. Para respaldar, haga una copia consistente de la base SQLite y guarde también la carpeta de fotos.
+5. Conserve el volumen `prestaya_data`: contiene `/app/data/prestaya.sqlite3`, `/app/data/uploads` y `/app/data/contracts`. Para respaldar, haga una copia consistente de la base SQLite y guarde también las carpetas de fotos y contratos.
+
+## Contratos y firmas
+
+1. En **Configuración**, complete nombre, cédula, ciudad de expedición, ciudad de domicilio, teléfono del prestamista y forma de pago.
+2. En la ficha del cliente, complete ciudad de expedición, ciudad de domicilio y teléfono. Los clientes existentes conservan sus datos anteriores; el sistema añade las columnas nuevas al arrancar.
+3. Al crear un préstamo se abre el contrato con la tasa, el capital, el total y las fechas reales de todas las cuotas. Si falta algún dato, el sistema indica cuál y ofrece enlaces para completarlo.
+4. El prestamista y el cliente firman en la pantalla táctil o con el mouse. La firma solo se acepta por HTTPS. Se guarda un PDF con ambas firmas, la fecha de firma y hashes SHA-256 en el volumen persistente. El PDF firmado no se regenera al editar los datos ni puede reemplazarse desde la interfaz.
+
+La firma dibujada y los hashes son evidencia técnica básica, no un servicio de firma digital certificada ni una verificación independiente de identidad. Revise el texto contractual y la validez del mecanismo de firma con asesoría jurídica antes de usarlo como documento definitivo. La tasa mensual predeterminada de 10% puede superar el límite legal colombiano aplicable; el sistema muestra esta advertencia, pero no calcula el límite de usura por modalidad y fecha.
 
 No requiere otro contenedor de base de datos. SQLite permite mantener todo en el mismo servicio. Para una instalación de alto tráfico o múltiples réplicas se necesitaría migrar a una base de datos servidor.
 
@@ -34,5 +43,6 @@ No requiere otro contenedor de base de datos. SQLite permite mantener todo en el
 - Préstamos de 1 a 36 meses, tasa individual de 0% a 100% mensual y calendario de cuotas.
 - Registro de abonos parciales, saldos, cuotas vencidas e historial de pagos.
 - Acceso con un usuario administrador y formularios protegidos con token CSRF.
+- Contrato en PDF con calendario de cuotas, firmas táctiles de ambas partes, descarga autenticada y comprobación de integridad.
 
 Los importes se registran en pesos colombianos enteros. No hay edición ni eliminación de préstamos o pagos para preservar el historial; las correcciones contables requieren una función de reverso que aún no está implementada.

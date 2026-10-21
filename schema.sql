@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS clients (
     last_name TEXT NOT NULL,
     phone TEXT NOT NULL DEFAULT '',
     address TEXT NOT NULL DEFAULT '',
+    id_issued_in TEXT NOT NULL DEFAULT '',
+    city TEXT NOT NULL DEFAULT '',
     photo TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -52,6 +54,25 @@ CREATE TABLE IF NOT EXISTS payment_allocations (
     payment_id INTEGER NOT NULL REFERENCES payments(id),
     installment_id INTEGER NOT NULL REFERENCES installments(id),
     amount INTEGER NOT NULL CHECK (amount > 0)
+);
+
+CREATE TABLE IF NOT EXISTS contract_settings (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    lender_name TEXT NOT NULL DEFAULT '',
+    lender_identification TEXT NOT NULL DEFAULT '',
+    lender_id_issued_in TEXT NOT NULL DEFAULT '',
+    lender_city TEXT NOT NULL DEFAULT '',
+    lender_phone TEXT NOT NULL DEFAULT '',
+    payment_instructions TEXT NOT NULL DEFAULT ''
+);
+
+CREATE TABLE IF NOT EXISTS contracts (
+    loan_id INTEGER PRIMARY KEY REFERENCES loans(id),
+    filename TEXT NOT NULL UNIQUE,
+    signed_at TEXT NOT NULL,
+    debtor_signature_sha256 TEXT NOT NULL,
+    lender_signature_sha256 TEXT NOT NULL,
+    document_sha256 TEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_installments_due ON installments(due_date, loan_id);
