@@ -22,8 +22,8 @@ El usuario administrador se actualiza con los valores de entorno en cada arranqu
 
 1. En Coolify cree una **Application** desde el repositorio Git `https://github.com/JeanGoP/prestamosya`, rama `main`, con estrategia de construcción **Docker Compose**. Use `/` como directorio base y `compose.yaml` como ubicación del archivo Compose.
 2. Configure `FLASK_SECRET_KEY`, `ADMIN_USERNAME` y `ADMIN_PASSWORD` como variables de entorno. Use valores largos y únicos para las dos credenciales secretas.
-3. En **Domains**, asigne un dominio HTTPS al servicio `prestaya` con puerto interno `8000` (por ejemplo, `https://prestamos.ejemplo.com:8000` en el campo de Coolify; el visitante usará HTTPS normal). Mantenga `COOKIE_SECURE=true`.
-4. Despliegue y compruebe que `/health` devuelve `{"status":"ok"}` antes de ingresar. No active **Raw Compose**, porque Coolify debe configurar el proxy.
+3. `SERVICE_URL_PRESTAYA_8000` en `compose.yaml` indica a Coolify que enrute el dominio generado al servicio `prestaya` en el puerto interno `8000`. En **Domains** puede reemplazarlo por un dominio propio HTTPS. Mantenga `COOKIE_SECURE=true` al usar HTTPS. El dominio temporal `sslip.io` generado por Coolify usa HTTP; para probar el inicio de sesión allí configure temporalmente `COOKIE_SECURE=false` y vuelva a `true` cuando tenga HTTPS.
+4. Despliegue y compruebe que `/health` devuelve `{"status":"ok"}` antes de ingresar. No active **Raw Compose**, porque Coolify debe configurar el proxy. Si aparece `404 page not found`, revise que el dominio esté asociado al servicio `prestaya` y al puerto `8000`, y que el contenedor figure como saludable.
 5. Conserve el volumen `prestaya_data`: contiene `/app/data/prestaya.sqlite3` y `/app/data/uploads`. Para respaldar, haga una copia consistente de la base SQLite y guarde también la carpeta de fotos.
 
 No requiere otro contenedor de base de datos. SQLite permite mantener todo en el mismo servicio. Para una instalación de alto tráfico o múltiples réplicas se necesitaría migrar a una base de datos servidor.
