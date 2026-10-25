@@ -595,6 +595,25 @@ def contract_sign(loan_id):
 @app.get("/prestamos/<int:loan_id>/contrato.pdf")
 @login_required
 def contract_download(loan_id):
+    return contract_pdf_response(loan_id, as_attachment=True)
+
+
+@app.get("/prestamos/<int:loan_id>/contrato/visualizar")
+@login_required
+def contract_preview(loan_id):
+    _loan, _client, _settings, _installments, contract = contract_details(loan_id)
+    if not contract:
+        abort(404)
+    return render_template("contract_preview.html", loan_id=loan_id)
+
+
+@app.get("/prestamos/<int:loan_id>/contrato/ver.pdf")
+@login_required
+def contract_inline_pdf(loan_id):
+    return contract_pdf_response(loan_id, as_attachment=False)
+
+
+def contract_pdf_response(loan_id, as_attachment):
     _loan, _client, _settings, _installments, contract = contract_details(loan_id)
     if not contract:
         abort(404)
@@ -604,7 +623,7 @@ def contract_download(loan_id):
         abort(404)
     if hashlib.sha256(pdf).hexdigest() != contract["document_sha256"]:
         abort(409, "El archivo del contrato no coincide con el documento firmado.")
-    response = send_file(BytesIO(pdf), mimetype="application/pdf", as_attachment=True,
+    response = send_file(BytesIO(pdf), mimetype="application/pdf", as_attachment=as_attachment,
                          download_name=f"prestaya-contrato-{loan_id}.pdf")
     response.headers["Cache-Control"] = "private, no-store"
     return response

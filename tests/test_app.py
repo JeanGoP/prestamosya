@@ -138,6 +138,17 @@ class LoanFlowTests(unittest.TestCase):
         self.assertEqual(pdf.status_code, 200)
         self.assertTrue(pdf.data.startswith(b"%PDF"))
         self.assertGreater(len(pdf.data), 5000)
+        self.assertIn("attachment", pdf.headers["Content-Disposition"])
+        preview_url = contract_url + "/visualizar"
+        self.assertIn(b"/contrato/ver.pdf", self.client.get(preview_url).data)
+        inline_pdf = self.client.get(contract_url + "/ver.pdf")
+        self.assertEqual(inline_pdf.status_code, 200)
+        self.assertEqual(inline_pdf.data, pdf.data)
+        self.assertIn("inline", inline_pdf.headers["Content-Disposition"])
+        self.assertEqual(inline_pdf.headers["Cache-Control"], "private, no-store")
+        loan_id = int(contract_url.rstrip("/").split("/")[-2])
+        self.assertIn(preview_url.encode(), self.client.get(f"/prestamos/{loan_id}").data)
+        self.assertEqual(self.module.app.test_client().get(contract_url + "/ver.pdf").status_code, 302)
         settings["lender_name"] = "Otra persona"
         self.client.post("/configuracion/contrato", data=settings)
         self.assertEqual(self.client.get(pdf_url).data, pdf.data)
@@ -146,12 +157,12 @@ class LoanFlowTests(unittest.TestCase):
             "debtor_signature": signature, "lender_signature": signature,
         })
         self.assertEqual(self.client.get(pdf_url).data, pdf.data)
-        loan_id = int(contract_url.rstrip("/").split("/")[-2])
         with self.module.app.app_context():
             contract = self.module.db().execute("SELECT filename FROM contracts WHERE loan_id=?", (loan_id,)).fetchone()
             path = self.module.CONTRACT_DIR / contract["filename"]
             path.write_bytes(b"alterado")
         self.assertEqual(self.client.get(pdf_url).status_code, 409)
+        self.assertEqual(self.client.get(contract_url + "/ver.pdf").status_code, 409)
 
     def test_existing_client_database_is_migrated(self):
         original_data_dir = self.module.DATA_DIR

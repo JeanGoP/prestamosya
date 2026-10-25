@@ -32,6 +32,7 @@ El usuario administrador se actualiza con los valores de entorno en cada arranqu
 2. En la ficha del cliente, complete ciudad de expedición, ciudad de domicilio y teléfono. Los clientes existentes conservan sus datos anteriores; el sistema añade las columnas nuevas al arrancar.
 3. Al crear un préstamo se abre el contrato con la tasa, el capital, el total y las fechas reales de todas las cuotas. Si falta algún dato, el sistema indica cuál y ofrece enlaces para completarlo.
 4. El prestamista y el cliente firman en la pantalla táctil o con el mouse. La firma solo se acepta por HTTPS. Se guarda un PDF con ambas firmas, la fecha de firma y hashes SHA-256 en el volumen persistente. El PDF firmado no se regenera al editar los datos ni puede reemplazarse desde la interfaz.
+5. Después de firmar, **Ver contrato firmado** abre el PDF guardado dentro del sistema. También puede descargarlo. La vista previa y la descarga requieren iniciar sesión y verifican la integridad del archivo.
 
 La firma dibujada y los hashes son evidencia técnica básica, no un servicio de firma digital certificada ni una verificación independiente de identidad. Revise el texto contractual y la validez del mecanismo de firma con asesoría jurídica antes de usarlo como documento definitivo. La tasa mensual predeterminada de 10% puede superar el límite legal colombiano aplicable; el sistema no calcula el límite de usura por modalidad y fecha.
 

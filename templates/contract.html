@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page-head"><div><p class="eyebrow">Préstamo #{{ loan.id }}</p><h1>Contrato de préstamo</h1><p class="muted">{{ client.first_name }} {{ client.last_name }} · {{ loan.principal | money }} de capital</p></div><a class="button secondary" href="{{ url_for('loan_detail', loan_id=loan.id) }}">Volver al préstamo</a></div>
 {% if contract %}
-<section class="card narrow"><h2>Contrato firmado</h2><p>El documento firmado el {{ contract.signed_at[:10] }} quedó guardado en PDF. Su contenido no se modifica aunque después cambien los datos del cliente o del prestamista.</p><a class="button primary" href="{{ url_for('contract_download', loan_id=loan.id) }}">Descargar contrato PDF</a></section>
+<section class="card narrow"><h2>Contrato firmado</h2><p>El documento firmado el {{ contract.signed_at[:10] }} quedó guardado en PDF. Su contenido no se modifica aunque después cambien los datos del cliente o del prestamista.</p><div class="actions"><a class="button primary" href="{{ url_for('contract_preview', loan_id=loan.id) }}">Visualizar contrato</a><a class="button secondary" href="{{ url_for('contract_download', loan_id=loan.id) }}">Descargar contrato PDF</a></div></section>
 {% elif missing %}
 <section class="card narrow"><h2>Complete estos datos antes de firmar</h2><ul class="missing-fields">{% for field in missing %}<li>{{ field }}</li>{% endfor %}</ul><div class="actions"><a class="button secondary" href="{{ url_for('contract_settings', loan_id=loan.id) }}">Datos del prestamista</a><a class="button secondary" href="{{ url_for('client_edit', client_id=client.id, loan_id=loan.id) }}">Datos del cliente</a></div></section>
 {% else %}

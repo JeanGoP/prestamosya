@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Visualizar contrato #{{ loan_id }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Préstamo #{{ loan_id }}</p><h1>Contrato firmado</h1><p class="muted">Visualización del PDF guardado con este préstamo.</p></div><div class="actions"><a class="button secondary" href="{{ url_for('contract_page', loan_id=loan_id) }}">Volver al contrato</a><a class="button primary" href="{{ url_for('contract_download', loan_id=loan_id) }}">Descargar PDF</a></div></div>
+<div class="card pdf-preview"><iframe src="{{ url_for('contract_inline_pdf', loan_id=loan_id) }}" title="Contrato firmado del préstamo #{{ loan_id }}"></iframe></div>
+<p class="muted pdf-fallback">Si su navegador no muestra el PDF, <a href="{{ url_for('contract_inline_pdf', loan_id=loan_id) }}" target="_blank" rel="noopener">ábralo en otra pestaña</a> o descárguelo.</p>
+{% endblock %}
